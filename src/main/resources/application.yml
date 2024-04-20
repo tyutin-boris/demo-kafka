@@ -1,3 +1,6 @@
+server:
+  port: 9000
+
 application:
   kafka:
     topic: "demo-topic"
@@ -9,6 +12,8 @@ spring:
     producer:
       bootstrap-servers: "localhost:9092"
       client-id: "demo-producer"
-
-server:
-  port: 9000
+    consumer:
+      group-id: demo-group
+      bootstrap-servers: "localhost:9092"
+      client-id: "demo-consumer"
+      auto-offset-reset: earliest
