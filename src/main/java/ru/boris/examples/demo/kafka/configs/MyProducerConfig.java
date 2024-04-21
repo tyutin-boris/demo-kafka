@@ -13,6 +13,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import ru.boris.examples.demo.kafka.dto.DemoValue;
 
 import java.util.Map;
 
@@ -26,14 +27,14 @@ public class MyProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, String> producerFactory(KafkaProperties kafkaProperties,
-                                                           ObjectMapper objectMapper) {
+    public ProducerFactory<String, DemoValue> producerFactory(KafkaProperties kafkaProperties,
+                                                              ObjectMapper objectMapper) {
         Map<String, Object> producerProperties = kafkaProperties.buildProducerProperties(null);
 
         producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         producerProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        DefaultKafkaProducerFactory<String, String> producerFactory =
+        DefaultKafkaProducerFactory<String, DemoValue> producerFactory =
                 new DefaultKafkaProducerFactory<>(producerProperties);
         producerFactory.setValueSerializer(new JsonSerializer<>(objectMapper));
 
@@ -41,7 +42,7 @@ public class MyProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
+    public KafkaTemplate<String, DemoValue> kafkaTemplate(ProducerFactory<String, DemoValue> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 
