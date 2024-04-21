@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -22,14 +23,18 @@ public class ProducerSchedulerImpl implements ProducerScheduler {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "*/5 * * * * *")
     public void send() {
         log.info("Scheduler start.");
 
         String helloKafka = "Hello kafka";
+        String howAreYou = "How are you ?";
+        String whatAreYouDoing = "What are you doing ?";
+        String bye = "Bye";
 
-        kafkaTemplate.send(topicName, helloKafka)
-                .whenComplete(getSendResultThrowableBiConsumer(helloKafka));
+        Stream.of(helloKafka, howAreYou, whatAreYouDoing, bye)
+                .forEach(message -> kafkaTemplate.send(topicName, message)
+                        .whenComplete(getSendResultThrowableBiConsumer(message)));
     }
 
     private BiConsumer<SendResult<String, String>, Throwable> getSendResultThrowableBiConsumer(String helloKafka) {

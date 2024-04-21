@@ -7,11 +7,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Configuration
 public class MyConsumerConfig {
@@ -36,5 +43,25 @@ public class MyConsumerConfig {
         return consumer;
     }
 
+    @Bean("listenerContainerFactory")
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>>
+    listenerContainerFactory(ConsumerFactory<String, String> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
 
+        factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(true);
+        factory.setConcurrency(1);
+
+        ContainerProperties containerProperties = factory.getContainerProperties();
+        containerProperties.setIdleBetweenPolls(1_000);
+        containerProperties.setPollTimeout(1_000);
+
+        ExecutorService executor = Executors.newFixedThreadPool(1, task -> new Thread(task, "kafka-consumer"));
+
+        ConcurrentTaskExecutor concurrentTaskExecutor = new ConcurrentTaskExecutor(executor);
+        containerProperties.setListenerTaskExecutor(concurrentTaskExecutor);
+
+        return factory;
+    }
 }
